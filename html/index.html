@@ -1,0 +1,19 @@
+{{ define "index" }}
+<!DOCTYPE html>
+<html lang="en">
+{{ template "head" . }}
+
+<body>
+  <div class="root">
+    {{ template "header" . }}
+    <p class="quote">{{ .Quote }}</p>
+    <section>
+      <h3>最近阅读 ({{ .Count }}/{{ .Cache }})</h3>
+      {{ template "list" . }}
+    </section>
+    {{ template "footer" . }}
+  </div>
+</body>
+
+</html>
+{{ end }}

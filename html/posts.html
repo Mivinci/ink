@@ -1,0 +1,19 @@
+{{ define "posts" }}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  {{ template "head" . }}
+</head>
+
+<body>
+  <div class="root">
+    <h1>{{ .Title }}</h1>
+    <h3>共 {{ .Count }} 篇</h3>
+    {{ template "list" . }}
+    </main>
+  </div>
+</body>
+
+</html>
+{{ end }}

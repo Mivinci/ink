@@ -1,0 +1,24 @@
+{{ define "post" }}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  {{ template "head" . }}
+  <link rel="stylesheet" href="/static/css/gmd.css">
+  <link rel="stylesheet" href="/static/css/katex.css">
+  <script defer src="/static/js/katex.js"></script>
+  <script defer src="/static/js/auto-render.js"></script>
+  <script src="/static/js/post.js"></script>
+</head>
+
+<body>
+  <div class="root">
+    <article class="markdown-body">
+      {{ .HTML }}
+    </article>
+    <section class="category"><a href="/{{.Category}}">#{{ .Category }}</a></section>
+  </div>
+</body>
+
+</html>
+{{ end }}

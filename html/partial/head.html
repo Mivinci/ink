@@ -1,0 +1,11 @@
+{{ define "head" }}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+{{ if .Title }}
+<title>{{.Title}}</title>
+{{ else }}
+<title>{{.Author}} | {{.Title}}</title>
+{{ end }}
+<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+<link rel="stylesheet" href="/static/css/ink.css">
+{{ end }}

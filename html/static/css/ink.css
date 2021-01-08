@@ -1,0 +1,82 @@
+body {
+  margin: 0;
+  font-family: "glyph-correction", "Amstelvar", "Noto Serif SC", serif;
+}
+
+.root {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+
+
+footer,
+footer a,
+.category a,
+.list a,
+.nav a {
+  color: #6c6c6c;
+}
+
+footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  margin: 12px auto;
+}
+
+.list {
+  list-style-type: disc;
+}
+
+.list .list-item {
+  display: flex;
+  align-items: baseline;
+  padding: 10px 0;
+  border-bottom: 1px dashed #6c6c6c;
+  justify-content: space-between;
+  font-size: 22px;
+}
+
+.nav a,
+.list .list-item a {
+  text-decoration: none;
+  color: #000;
+}
+
+.nav a,
+.list .list-item a :hover {
+  color: #6c6c6c;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.nav {
+  font-size: 22px;
+}
+
+.nav ul {
+  list-style-type: none;
+  display: flex;
+}
+.nav ul li {
+  margin-left: 10px;
+}
+
+@font-face {
+  font-family: "glyph-correction";
+  font-display: swap;
+  src: url("/static/fonts/glyph-correction.woff2") format("woff2"),
+    url("/static/fonts/glyph-correction.woff") format("woff"),
+    url("/static/fonts/glyph-correction.ttf") format("truetype"),
+    url("/static/fonts/glyph-correction.eot") format("embedded-opentype");
+  unicode-range: U+00B7, U+2014, U+2022, U+2026;
+  font-weight: inherit;
+  font-style: inherit;
+}

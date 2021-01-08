@@ -1,0 +1,10 @@
+{{ define "list" }}
+<ul class="list">
+  {{ range .List }}
+    <li class="list-item">
+      <a href="{{ .Path }}">{{ .Title }}</a>
+      <time datetime="{{ .Time }}">{{ .Time.Format "2006-01-02" }}</time>
+    </li>
+  {{ end }}
+</ul>
+{{ end }}
