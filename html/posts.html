@@ -7,12 +7,10 @@
 </head>
 
 <body>
-  <div class="root">
-    <h1>{{ .Title }}</h1>
-    <h3>共 {{ .Count }} 篇</h3>
-    {{ template "list" . }}
-    </main>
-  </div>
+  <h1>{{ upper .Title }}</h1>
+  <h3>共 {{ .Count }} 篇</h3>
+  {{ template "list" . }}
+  </main>
 </body>
 
 </html>

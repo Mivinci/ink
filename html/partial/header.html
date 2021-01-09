@@ -8,7 +8,7 @@
       {{ if .Categories }}
       {{ range .Categories }}
       <li>
-        <a href="{{ .Path }}">{{ .Name }}</a>
+        <a href="{{ .Path }}">{{ upper .Name }}</a>
       </li>
       {{ end }}
       {{ end }}

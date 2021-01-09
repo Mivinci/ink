@@ -1,10 +1,15 @@
 {{ define "list" }}
 <ul class="list">
   {{ range .List }}
-    <li class="list-item">
-      <a href="{{ .Path }}">{{ .Title }}</a>
+  <li class="list-item">
+    <a href="{{ .Path }}">{{ clean .Title }}</a>
+    <div class="info">
+      {{ if .Size }}
+      <span class="pin">{{ size .Size }}</span>
+      {{ end }}
       <time datetime="{{ .Time }}">{{ .Time.Format "2006-01-02" }}</time>
-    </li>
+    </div>
+  </li>
   {{ end }}
 </ul>
 {{ end }}

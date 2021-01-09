@@ -1,18 +1,16 @@
 body {
-  margin: 0;
-  font-family: "glyph-correction", "Amstelvar", "Noto Serif SC", serif;
-}
-
-.root {
   max-width: 880px;
   margin: 0 auto;
   padding: 0 24px;
+  background-color: #fff;
+  font-family: "glyph-correction", "Amstelvar", "Noto Serif SC", serif;
 }
 
-
+.category {
+  margin: 20px 0;
+}
 
 footer,
-footer a,
 .category a,
 .list a,
 .nav a {
@@ -29,7 +27,8 @@ footer {
 }
 
 .list {
-  list-style-type: disc;
+  list-style-type: none;
+  padding: 0;
 }
 
 .list .list-item {
@@ -41,14 +40,18 @@ footer {
   font-size: 22px;
 }
 
+.list .list-item .pin {
+  margin-right: 8px;
+}
+
 .nav a,
 .list .list-item a {
   text-decoration: none;
   color: #000;
 }
 
-.nav a,
-.list .list-item a :hover {
+.nav a:hover,
+.list .list-item a:hover {
   color: #6c6c6c;
 }
 
@@ -67,6 +70,15 @@ footer {
 }
 .nav ul li {
   margin-left: 10px;
+}
+
+.markdown-body {
+  margin-top: 18px;
+  font-family: "glyph-correction", "Amstelvar", "Noto Serif SC", serif !important;
+}
+
+.markdown-body pre {
+  font-family: "glyph-correction", "Source Code Pro", "Noto Serif SC", monospace !important;
 }
 
 @font-face {

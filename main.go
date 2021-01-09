@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -23,12 +24,12 @@ import (
 )
 
 type Option struct {
-	Author    string
-	Brand     string
-	Quote     string
-	GitHub    string
-	Copyright string
-	Cache     int
+	Author string
+	Brand  string
+	Quote  string
+	GitHub string
+	Since  string
+	Cache  int
 }
 
 func (o *Option) Load(path string) error {
@@ -59,6 +60,7 @@ type Post struct {
 	Path     string
 	Title    string
 	Category string
+	Size     int64
 	HTML     template.HTML
 	Time     time.Time
 }
@@ -83,6 +85,7 @@ func (p *Post) Load(path string) error {
 	p.Path = path
 	p.HTML = template.HTML(blackfriday.MarkdownCommon(buf.Bytes()))
 	p.Time = fi.ModTime()
+	p.Size = fi.Size()
 	return nil
 }
 
@@ -91,38 +94,70 @@ type Category struct {
 	Path string
 }
 
+type Dirs struct {
+	mu    sync.RWMutex
+	cache []*Category
+}
+
+func (ds *Dirs) List() []*Category {
+	ds.mu.RLock()
+	defer ds.mu.RUnlock()
+	return ds.cache
+}
+
+func (ds *Dirs) Load(root string) error {
+	fis, err := ioutil.ReadDir(root)
+	if err != nil {
+		return err
+	}
+	ds.mu.Lock()
+	ds.cache = nil // give it to GC
+	ds.cache = make([]*Category, 0)
+	for _, fi := range fis {
+		if fi.IsDir() {
+			ds.cache = append(ds.cache, &Category{
+				Name: filepath.Base(fi.Name()),
+				Path: fi.Name(),
+			})
+		}
+	}
+	ds.mu.Unlock()
+	return nil
+}
+
 type MD struct {
 	mu   sync.RWMutex
-	wc   *fsnotify.Watcher
+	fw   *fsnotify.Watcher
 	Opt  *Option
 	root string
 	ext  string
 
 	cache *lru.Cache
-	posts []*Category
+	dirs  *Dirs
 }
 
 func New(root, ext string) *MD {
 	md := &MD{
 		root: root,
 		ext:  ext,
+		dirs: &Dirs{},
 		Opt:  MustOpt(),
-		wc:   MustWC(),
+		fw:   MustWC(),
 	}
 	md.cache = lru.New(md.Opt.Cache)
 	md.cache.Evict = func(k, v interface{}) {}
-	must(md.wcadd())
-	must(md.postsdir())
+	must(md.watch())
+	must(md.dirs.Load(root))
 	return md
 }
 
-func (m *MD) wcadd() error {
-	if err := m.wc.Add(m.root); err != nil {
+func (m *MD) watch() error {
+	if err := m.fw.Add(m.root); err != nil {
 		return err
 	}
 	return dfs(m.root, func(path string, fi os.FileInfo) error {
 		if fi.IsDir() {
-			return m.wc.Add(path)
+			return m.fw.Add(path)
 		}
 		return nil
 	})
@@ -130,17 +165,21 @@ func (m *MD) wcadd() error {
 
 // Watch must be executed in a goroutine
 func (m *MD) Watch() {
-	for evt := range m.wc.Events {
+	for evt := range m.fw.Events {
 		switch evt.Op {
 		case fsnotify.Write, fsnotify.Create:
 			if m.IsFile(evt.Name) {
 				m.Update(evt.Name) // nolint:errcheck
 			}
-			m.wc.Add(evt.Name) // nolint:errcheck
-			m.postsdir()       // nolint:errcheck
+			m.fw.Add(evt.Name)  // nolint:errcheck
+			m.dirs.Load(m.root) // nolint:errcheck
 			log.Printf("%s\n", evt.String())
 		case fsnotify.Remove, fsnotify.Rename:
-			m.Remove(evt.Name)
+			if m.IsFile(evt.Name) {
+				m.Remove(evt.Name)
+			}
+			m.fw.Remove(evt.Name) // nolint:errcheck
+			m.dirs.Load(m.root)   // nolint:errcheck
 			log.Printf("%s\n", evt.String())
 		case fsnotify.Chmod:
 			log.Printf("%s\n", evt.String())
@@ -149,7 +188,7 @@ func (m *MD) Watch() {
 }
 
 func (m *MD) Close() error {
-	return m.wc.Close()
+	return m.fw.Close()
 }
 
 func (m *MD) Post(path string) (*Post, error) {
@@ -193,6 +232,7 @@ func (m *MD) List(dir string) (ps []*Post, err error) {
 				Path:  m.Clean(path),
 				Title: filepath.Base(path),
 				Time:  fi.ModTime(),
+				Size:  fi.Size(),
 			})
 		}
 		return nil
@@ -214,29 +254,6 @@ func (m *MD) Hot() (ps []*Post, err error) {
 		return nil
 	})
 	return
-}
-
-func (m *MD) Posts() []*Category {
-	return m.posts
-}
-
-func (m *MD) postsdir() error {
-	fis, err := ioutil.ReadDir(m.root)
-	if err != nil {
-		return err
-	}
-	if m.posts == nil {
-		m.posts = make([]*Category, 0)
-	}
-	for _, fi := range fis {
-		if fi.IsDir() {
-			m.posts = append(m.posts, &Category{
-				Name: filepath.Base(fi.Name()),
-				Path: fi.Name(),
-			})
-		}
-	}
-	return nil
 }
 
 func (m *MD) IsFile(path string) bool {
@@ -330,8 +347,37 @@ func NewServer(root, assets string) *Server {
 		handler: mux.New(),
 		root:    root,
 		assets:  assets,
-		tpl:     template.Must(template.ParseFiles(htmls(root)...)),
+		tpl:     newTemplate(root),
 	}
+}
+
+func newTemplate(root string) *template.Template {
+	t := template.New("ink")
+	t.Funcs(template.FuncMap{
+		"upper": upper,
+		"clean": clean,
+		"size":  size,
+	})
+	var err error
+	if t, err = t.ParseFiles(htmls(root)...); err != nil {
+		panic(err)
+	}
+	return t
+}
+
+func upper(s string) string {
+	return strings.ToUpper(s)
+}
+
+func clean(path string) string {
+	return path[:(len(path) - 3)]
+}
+
+func size(i int64) string {
+	if i < 1024 {
+		return fmt.Sprintf("%dB", i)
+	}
+	return fmt.Sprintf("%.1fKB", float64(i)/1024)
 }
 
 func (s *Server) Start(addr string) {
@@ -362,7 +408,7 @@ func (s *Server) Handle(md *MD) {
 			List:       ps,
 			Count:      len(ps),
 			Title:      md.Opt.Brand,
-			Categories: md.Posts(),
+			Categories: md.dirs.List(),
 		})
 	})
 	s.handler.HandleFunc("GET", "/*", func(w http.ResponseWriter, r *http.Request) {
@@ -442,7 +488,7 @@ func main() {
 
 	go shutdown(func() {
 		m.Close()
-		log.Println("ink: MD closed")
+		log.Println("ink: closed")
 		s.Close()
 	})
 
