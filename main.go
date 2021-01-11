@@ -258,7 +258,7 @@ func (m *MD) Hot() (ps []*Post, err error) {
 			return nil
 		}
 		ps = append(ps, &Post{
-			Path:     path,
+			Path:     m.Clean(path),
 			Title:    title,
 			Category: pdir,
 			Time:     v.(*Post).Time,
