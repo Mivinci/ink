@@ -6,10 +6,10 @@
 <body>
   {{ template "header" . }}
   <p class="quote">{{ .Quote }}</p>
-  <section>
+  <main class="main">
     <h3>最近阅读 ({{ .Count }}/{{ .Cache }})</h3>
     {{ template "list" . }}
-  </section>
+  </main>
   {{ template "footer" . }}
 </body>
 

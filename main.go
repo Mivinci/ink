@@ -155,9 +155,13 @@ func (m *MD) watch() error {
 	if err := m.fw.Add(m.root); err != nil {
 		return err
 	}
+	log.Printf("(watching) %s\n", m.root)
 	return dfs(m.root, func(path string, fi os.FileInfo) error {
 		if fi.IsDir() {
-			return m.fw.Add(path)
+			if err := m.fw.Add(path); err != nil {
+				return err
+			}
+			log.Printf("(watching) %s\n", path)
 		}
 		return nil
 	})
@@ -168,14 +172,14 @@ func (m *MD) Watch() {
 	for evt := range m.fw.Events {
 		switch evt.Op {
 		case fsnotify.Write, fsnotify.Create:
-			if m.IsFile(evt.Name) {
+			if m.Is(evt.Name) {
 				m.Update(evt.Name) // nolint:errcheck
 			}
 			m.fw.Add(evt.Name)  // nolint:errcheck
 			m.dirs.Load(m.root) // nolint:errcheck
 			log.Printf("%s\n", evt.String())
 		case fsnotify.Remove, fsnotify.Rename:
-			if m.IsFile(evt.Name) {
+			if m.Is(evt.Name) {
 				m.Remove(evt.Name)
 			}
 			m.fw.Remove(evt.Name) // nolint:errcheck
@@ -193,17 +197,20 @@ func (m *MD) Close() error {
 
 func (m *MD) Post(path string) (*Post, error) {
 	m.mu.RLock()
-	defer m.mu.RUnlock()
 	p, ok := m.cache.Get(path)
 	if ok {
+		m.mu.RUnlock()
 		log.Printf("%s (hit cache)\n", path)
 		return p.(*Post), nil
 	}
+	m.mu.RUnlock()
 	post := &Post{}
 	if err := post.Load(path); err != nil {
 		return nil, err
 	}
+	m.mu.Lock()
 	m.cache.Add(path, post)
+	m.mu.Unlock()
 	return post, nil
 }
 
@@ -227,7 +234,7 @@ func (m *MD) Remove(path string) {
 func (m *MD) List(dir string) (ps []*Post, err error) {
 	ps = make([]*Post, 0)
 	err = dfs(dir, func(path string, fi os.FileInfo) error {
-		if fi.IsDir() || m.IsFile(path) {
+		if fi.IsDir() || m.Is(path) {
 			ps = append(ps, &Post{
 				Path:  m.Clean(path),
 				Title: filepath.Base(path),
@@ -245,18 +252,23 @@ func (m *MD) Hot() (ps []*Post, err error) {
 	defer m.mu.RUnlock()
 	ps = make([]*Post, 0)
 	err = m.cache.Walk(func(k, v interface{}) error {
-		path := m.Clean(k.(string))
+		path := k.(string)
+		pdir, title := parse(path)
+		if title == "index" {
+			return nil
+		}
 		ps = append(ps, &Post{
-			Path:  path,
-			Title: path,
-			Time:  v.(*Post).Time,
+			Path:     path,
+			Title:    title,
+			Category: pdir,
+			Time:     v.(*Post).Time,
 		})
 		return nil
 	})
 	return
 }
 
-func (m *MD) IsFile(path string) bool {
+func (m *MD) Is(path string) bool {
 	return filepath.Ext(path) == m.ext
 }
 
@@ -319,7 +331,7 @@ func htmls(root string) []string {
 	dfs(root, func(path string, fi os.FileInfo) error { // nolint:errcheck
 		if filepath.Ext(fi.Name()) == ".html" {
 			ps = append(ps, path)
-			log.Printf("%s (template)\n", path)
+			// log.Printf("%s (template)\n", path)
 		}
 		return nil
 	})
@@ -352,21 +364,21 @@ func NewServer(root, assets string) *Server {
 }
 
 func newTemplate(root string) *template.Template {
-	t := template.New("ink")
-	t.Funcs(template.FuncMap{
-		"upper": upper,
-		"clean": clean,
-		"size":  size,
-	})
+	t := template.New("ink").Funcs(funcMap)
 	var err error
 	if t, err = t.ParseFiles(htmls(root)...); err != nil {
-		panic(err)
+		log.Fatalf("parse templates failed: %s\n", err)
 	}
 	return t
 }
 
-func upper(s string) string {
-	return strings.ToUpper(s)
+var funcMap = template.FuncMap{
+	"upper":     strings.ToUpper,
+	"lower":     strings.ToLower,
+	"trimLeft":  strings.TrimLeft,
+	"trimRight": strings.TrimRight,
+	"clean":     clean,
+	"size":      size,
 }
 
 func clean(path string) string {
@@ -377,7 +389,7 @@ func size(i int64) string {
 	if i < 1024 {
 		return fmt.Sprintf("%dB", i)
 	}
-	return fmt.Sprintf("%.1fKB", float64(i)/1024)
+	return fmt.Sprintf("%.1fkB", float64(i)/1024)
 }
 
 func (s *Server) Start(addr string) {

@@ -2,7 +2,7 @@
 <ul class="list">
   {{ range .List }}
   <li class="list-item">
-    <a href="{{ .Path }}">{{ clean .Title }}</a>
+    <a href="{{ .Path }}">{{ trimRight .Title ".md" }}</a>
     <div class="info">
       {{ if .Size }}
       <span class="pin">{{ size .Size }}</span>

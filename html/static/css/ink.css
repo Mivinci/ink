@@ -2,28 +2,20 @@ body {
   max-width: 880px;
   margin: 0 auto;
   padding: 0 24px;
-  background-color: #fff;
-  font-family: "glyph-correction", "Amstelvar", "Noto Serif SC", serif;
+  font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji;
 }
 
-.category {
-  margin: 20px 0;
-}
-
-footer,
+.footer a,
 .category a,
-.list a,
-.nav a {
+.list a {
   color: #6c6c6c;
 }
 
-footer {
-  position: absolute;
-  bottom: 0;
-  left: 0;
+.footer {
+  height: 4vh;
   width: 100%;
   text-align: center;
-  margin: 12px auto;
+  margin-top: 12px;
 }
 
 .list {
@@ -37,11 +29,19 @@ footer {
   padding: 10px 0;
   border-bottom: 1px dashed #6c6c6c;
   justify-content: space-between;
-  font-size: 22px;
+  font-size: 20px;
+}
+
+.list .list-item .info {
+  font-size: 16px;
 }
 
 .list .list-item .pin {
   margin-right: 8px;
+  background-color: rgba(211, 211, 211, 0.774);
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 14px;
 }
 
 .nav a,
@@ -55,13 +55,19 @@ footer {
   color: #6c6c6c;
 }
 
+.nav a:hover,
+.list .list-item a:visited {
+  color: #6c6c6c;
+}
+
 .header {
   display: flex;
   justify-content: space-between;
 }
 
 .nav {
-  font-size: 22px;
+  font-size: 18px;
+  margin-top: 5px;
 }
 
 .nav ul {
@@ -72,23 +78,21 @@ footer {
   margin-left: 10px;
 }
 
+.category {
+  margin: 22px 0;
+  font-size: 14px;
+  text-align: center;
+}
+
+.category a {
+  margin-right: 8px;
+}
+
+.main {
+  min-height: 75vh;
+}
+
 .markdown-body {
-  margin-top: 18px;
-  font-family: "glyph-correction", "Amstelvar", "Noto Serif SC", serif !important;
-}
-
-.markdown-body pre {
-  font-family: "glyph-correction", "Source Code Pro", "Noto Serif SC", monospace !important;
-}
-
-@font-face {
-  font-family: "glyph-correction";
-  font-display: swap;
-  src: url("/static/fonts/glyph-correction.woff2") format("woff2"),
-    url("/static/fonts/glyph-correction.woff") format("woff"),
-    url("/static/fonts/glyph-correction.ttf") format("truetype"),
-    url("/static/fonts/glyph-correction.eot") format("embedded-opentype");
-  unicode-range: U+00B7, U+2014, U+2022, U+2026;
-  font-weight: inherit;
-  font-style: inherit;
+  margin-top: 16px;
+  min-height: 85vh;
 }
