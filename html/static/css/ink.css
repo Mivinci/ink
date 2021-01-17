@@ -25,8 +25,8 @@ body {
 
 .list .list-item {
   display: flex;
-  align-items: baseline;
-  padding: 10px 0;
+  align-items: center;
+  padding: 13px 0;
   border-bottom: 1px dashed #6c6c6c;
   justify-content: space-between;
   font-size: 20px;
@@ -42,6 +42,40 @@ body {
   padding: 2px 4px;
   border-radius: 4px;
   font-size: 14px;
+}
+
+.list .list-item .name {
+  display: flex;
+}
+
+.list .list-item .name svg {
+  margin-top: 1px;
+}
+
+.list .list-item .name a {
+  margin-left: 8px;
+}
+
+@media (max-width: 375px) {
+  .list .list-item {
+    display: block;
+    padding: 10px 0;
+  }
+  .list .list-item .info {
+    margin-top: 5px;
+    font-size: 12px;
+  }
+  .list .list-item .name {
+    font-size: 16px;
+  }
+  .list .list-item .name svg {
+    margin-top: 0;
+  }
+  .list .list-item .pin {
+    font-size: 12px;
+    padding: 0;
+    background-color: transparent;
+  }
 }
 
 .nav a,

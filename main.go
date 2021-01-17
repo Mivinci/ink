@@ -63,6 +63,7 @@ type Post struct {
 	Size     int64
 	HTML     template.HTML
 	Time     time.Time
+	IsDir    bool
 }
 
 func (p *Post) Load(path string) error {
@@ -235,12 +236,16 @@ func (m *MD) List(dir string) (ps []*Post, err error) {
 	ps = make([]*Post, 0)
 	err = dfs(dir, func(path string, fi os.FileInfo) error {
 		if fi.IsDir() || m.Is(path) {
-			ps = append(ps, &Post{
+			p := &Post{
 				Path:  m.Clean(path),
 				Title: filepath.Base(path),
 				Time:  fi.ModTime(),
 				Size:  fi.Size(),
-			})
+			}
+			if fi.IsDir() {
+				p.IsDir = true
+			}
+			ps = append(ps, p)
 		}
 		return nil
 	})

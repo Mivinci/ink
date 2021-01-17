@@ -7,7 +7,7 @@
   {{ template "header" . }}
   <p class="quote">{{ .Quote }}</p>
   <main class="main">
-    <h3>最近阅读 ({{ .Count }}/{{ .Cache }})</h3>
+    <h3>Recently viewed ({{ .Count }}/{{ .Cache }})</h3>
     {{ template "list" . }}
   </main>
   {{ template "footer" . }}
